@@ -16,6 +16,8 @@ import cookieParser from "cookie-parser";
 
 export const app: Application = express();
 
+app.set("trust proxy", 1);
+
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 // Cookie parser must be before CORS to ensure cookies are parsed
