@@ -28,12 +28,11 @@ function parseExpiresIn(expiresIn: string): number {
 
 function getCookieOptions(maxAge: number) {
   const isProduction = process.env.NODE_ENV === "production";
-  const sameSite = isProduction ? ("none" as const) : ("lax" as const);
 
   return {
     httpOnly: true,
     secure: isProduction, // Only use secure cookies in production (HTTPS)
-    sameSite: sameSite,
+    sameSite: "lax" as const,
     maxAge: maxAge,
     path: "/",
   };
