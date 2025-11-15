@@ -1,0 +1,74 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider      = "prisma-client"
+  output        = "../src/generated/prisma"
+  binaryTargets = ["native", "linux-musl-arm64-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id             Int            @id @default(autoincrement())
+  name           String         @db.VarChar(100)
+  username       String         @unique @db.VarChar(191)
+  password       String         @db.VarChar(191)
+  created_at     DateTime       @default(now())
+  updated_at     DateTime       @default(now()) @updatedAt
+  refresh_tokens RefreshToken[]
+  posts          Post[]
+  nodes          Node[]
+
+  @@map("users")
+}
+
+model RefreshToken {
+  id          Int       @id @default(autoincrement())
+  jti         String    @unique @db.VarChar(191)
+  token       String    @db.Text
+  expires_at  DateTime
+  revoked_at  DateTime?
+  replaced_by String?   @db.VarChar(191)
+  user_id     Int?
+  user        User?     @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: Restrict)
+  created_at  DateTime  @default(now())
+  updated_at  DateTime  @default(now()) @updatedAt
+
+  @@map("refresh_tokens")
+}
+
+model Post {
+  id             Int      @id @default(autoincrement())
+  user_id        Int
+  initial_number Decimal  @db.Decimal(65, 30)
+  created_at     DateTime @default(now())
+  user           User     @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: Restrict)
+  nodes          Node[]
+
+  @@map("posts")
+}
+
+model Node {
+  id            Int      @id @default(autoincrement())
+  post_id       Int
+  parent_id     Int?
+  user_id       Int
+  operation     String   @db.VarChar(20) // "+", "-", "*", "/", "^"
+  operand_value Decimal  @db.Decimal(65, 30)
+  result_value  Decimal  @db.Decimal(65, 30)
+  depth         Int      @default(0)
+  created_at    DateTime @default(now())
+  post          Post     @relation(fields: [post_id], references: [id], onDelete: Cascade, onUpdate: Restrict)
+  user          User     @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: Restrict)
+  parent        Node?    @relation("NodeTree", fields: [parent_id], references: [id], onDelete: Cascade, onUpdate: Restrict)
+  children      Node[]   @relation("NodeTree")
+
+  @@map("nodes")
+}
