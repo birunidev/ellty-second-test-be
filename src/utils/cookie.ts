@@ -32,7 +32,7 @@ function getCookieOptions(maxAge: number) {
   return {
     httpOnly: true,
     secure: isProduction, // Only use secure cookies in production (HTTPS)
-    sameSite: "lax" as const,
+    sameSite: isProduction ? ("none" as const) : ("lax" as const), // "none" required for cross-origin cookies
     maxAge: maxAge,
     path: "/",
   };
