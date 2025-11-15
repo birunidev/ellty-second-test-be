@@ -28,13 +28,19 @@ function parseExpiresIn(expiresIn: string): number {
 
 function getCookieOptions(maxAge: number) {
   const isProduction = process.env.NODE_ENV === "production";
+  const sameSite = isProduction ? ("none" as const) : ("lax" as const);
+
+  // When sameSite is "none", secure MUST be true (required by browsers)
+  const secure = sameSite === "none" ? true : isProduction;
 
   return {
     httpOnly: true,
-    secure: isProduction, // Only use secure cookies in production (HTTPS)
-    sameSite: isProduction ? ("none" as const) : ("lax" as const), // "none" required for cross-origin cookies
+    secure: secure,
+    sameSite: sameSite,
     maxAge: maxAge,
     path: "/",
+    // Don't set domain for cross-origin cookies - let browser handle it
+    // Setting domain can cause issues with cross-origin requests
   };
 }
 
@@ -80,20 +86,26 @@ export function getRefreshTokenFromCookie(req: Request): string | undefined {
 
 export function clearAccessTokenCookie(res: Response): void {
   const isProduction = process.env.NODE_ENV === "production";
+  const sameSite = isProduction ? ("none" as const) : ("lax" as const);
+  const secure = sameSite === "none" ? true : isProduction;
+
   res.clearCookie(ACCESS_TOKEN_COOKIE_NAME, {
     httpOnly: true,
-    secure: isProduction,
-    sameSite: isProduction ? ("none" as const) : ("lax" as const),
+    secure: secure,
+    sameSite: sameSite,
     path: "/",
   });
 }
 
 export function clearRefreshTokenCookie(res: Response): void {
   const isProduction = process.env.NODE_ENV === "production";
+  const sameSite = isProduction ? ("none" as const) : ("lax" as const);
+  const secure = sameSite === "none" ? true : isProduction;
+
   res.clearCookie(REFRESH_TOKEN_COOKIE_NAME, {
     httpOnly: true,
-    secure: isProduction,
-    sameSite: isProduction ? ("none" as const) : ("lax" as const),
+    secure: secure,
+    sameSite: sameSite,
     path: "/",
   });
 }
